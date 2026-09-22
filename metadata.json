@@ -1,0 +1,8 @@
+{
+  "name": "Flux Platform & Plugins",
+  "description": "Modern, minimalistic dark-themed platform showcasing Minecraft plugins, texture packs, modpacks, skripts, and config setups with external Modrinth downloads.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
