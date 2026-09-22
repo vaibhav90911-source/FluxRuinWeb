@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Lock, Mail, Eye, EyeOff, ShieldAlert, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Lock, UserCheck, Eye, EyeOff, ShieldAlert, ArrowRight, ShieldCheck } from 'lucide-react';
 import { loginOwner, isOwnerAuthenticated } from '../data/auth';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
+  const [identity, setIdentity] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,14 +24,14 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
 
     setTimeout(() => {
-      const success = loginOwner(email, password);
+      const success = loginOwner(identity, password);
       if (success) {
         navigate('/owner', { replace: true });
       } else {
-        setError('Invalid owner credentials. Please verify your email and password.');
+        setError('Invalid owner credentials. Access denied.');
         setLoading(false);
       }
-    }, 400);
+    }, 350);
   };
 
   return (
@@ -57,7 +57,7 @@ export const LoginPage: React.FC = () => {
               Owner Access Portal
             </h1>
             <p className="text-xs text-zinc-400">
-              Restricted management panel for Flux projects & configurations
+              Restricted management panel for Flux infrastructure & publishing
             </p>
           </div>
 
@@ -73,19 +73,19 @@ export const LoginPage: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-xs font-mono text-zinc-300 uppercase tracking-wider mb-2">
-                Owner Email
+                Owner ID / Username
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500">
-                  <Mail className="w-4 h-4" />
+                  <UserCheck className="w-4 h-4" />
                 </div>
                 <input
-                  id="login-email-input"
-                  type="email"
+                  id="login-identity-input"
+                  type="text"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="fluxruinmc@gmail.com"
+                  value={identity}
+                  onChange={(e) => setIdentity(e.target.value)}
+                  placeholder="owner / admin"
                   className="w-full pl-10 pr-4 py-3 rounded-2xl bg-white/[0.03] border border-white/10 text-white placeholder-zinc-600 text-sm focus:outline-none focus:border-white transition-colors"
                 />
               </div>
@@ -123,7 +123,7 @@ export const LoginPage: React.FC = () => {
               id="login-submit-btn"
               type="submit"
               disabled={loading}
-              className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-full bg-white hover:bg-zinc-200 text-black font-bold text-sm transition-all duration-200 disabled:opacity-50 cursor-pointer shadow-sm"
+              className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-full bg-white hover:bg-zinc-200 text-black font-bold text-sm transition-all duration-200 disabled:opacity-50 cursor-pointer shadow-sm hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:scale-[1.01] active:scale-95"
             >
               {loading ? (
                 <span>Authenticating...</span>
@@ -140,7 +140,7 @@ export const LoginPage: React.FC = () => {
           <div className="mt-8 pt-6 border-t border-white/10 flex items-center justify-between text-[11px] text-zinc-500">
             <div className="flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-white" />
-              <span>Public registration is closed</span>
+              <span>Restricted administrator system</span>
             </div>
             <Link to="/" className="text-zinc-400 hover:text-white transition-colors">
               Return Home

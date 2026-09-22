@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, Sparkles, Terminal } from 'lucide-react';
+import { Shield, Sparkles, Terminal, Lock, Settings } from 'lucide-react';
 import { useProjects } from '../hooks/useProjects';
+import { useAuth } from '../data/auth';
 
 interface FooterProps {
   onOpenDiscord: () => void;
@@ -9,6 +10,7 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ onOpenDiscord }) => {
   const projects = useProjects();
+  const { isAuthenticated, logout } = useAuth();
 
   return (
     <footer id="app-footer" className="border-t border-white/[0.08] bg-[#050505] text-zinc-400 text-sm">
@@ -92,7 +94,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenDiscord }) => {
             </ul>
           </div>
 
-          {/* Developer Resources */}
+          {/* Developer Resources & Management */}
           <div>
             <h4 className="text-xs font-mono uppercase tracking-wider text-white mb-3">Developer Hub</h4>
             <ul className="space-y-2 text-xs">
@@ -114,6 +116,35 @@ export const Footer: React.FC<FooterProps> = ({ onOpenDiscord }) => {
                   Release Matrix
                 </Link>
               </li>
+
+              {/* Owner Access & Authentication State */}
+              {isAuthenticated ? (
+                <>
+                  <li className="pt-2 border-t border-white/5 flex items-center justify-between">
+                    <Link
+                      to="/owner"
+                      className="text-white hover:text-zinc-300 transition-colors flex items-center gap-1.5 font-medium"
+                    >
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <Settings className="w-3.5 h-3.5 text-zinc-400" />
+                      <span>Owner Panel</span>
+                    </Link>
+                    <button
+                      onClick={logout}
+                      className="text-[11px] text-red-400 hover:text-red-300 transition-colors cursor-pointer"
+                    >
+                      Sign Out
+                    </button>
+                  </li>
+                </>
+              ) : (
+                <li className="pt-2 border-t border-white/5 flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-zinc-500" />
+                  <Link to="/login" className="hover:text-white transition-colors">
+                    Owner Login
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
 
@@ -127,7 +158,23 @@ export const Footer: React.FC<FooterProps> = ({ onOpenDiscord }) => {
             <span>•</span>
             <span className="hover:text-zinc-300 cursor-pointer">Terms of Service</span>
             <span>•</span>
-            <span className="text-zinc-400 font-mono">v2.4 LTS</span>
+            {isAuthenticated ? (
+              <Link
+                to="/owner"
+                className="text-white hover:text-zinc-300 font-mono flex items-center gap-1 transition-colors"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span>Owner Panel</span>
+              </Link>
+            ) : (
+              <Link
+                to="/login"
+                className="hover:text-zinc-300 font-mono flex items-center gap-1 transition-colors"
+              >
+                <Lock className="w-3 h-3 text-zinc-500" />
+                <span>Login</span>
+              </Link>
+            )}
           </div>
         </div>
       </div>

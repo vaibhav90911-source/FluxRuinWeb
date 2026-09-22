@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Sparkles, ChevronDown } from 'lucide-react';
+import { Menu, X, Sparkles, ChevronDown, Settings, LogOut } from 'lucide-react';
 import { useProjects } from '../hooks/useProjects';
+import { useAuth } from '../data/auth';
 
 interface NavbarProps {
   onOpenDiscord: () => void;
@@ -12,6 +13,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenDiscord }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [pluginDropdownOpen, setPluginDropdownOpen] = useState(false);
   const projects = useProjects();
+  const { isAuthenticated, logout } = useAuth();
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
@@ -49,7 +51,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenDiscord }) => {
           </span>
         </Link>
 
-        {/* Center: Separate Page Links (/features, /projects) */}
+        {/* Center: Separate Page Links (/features, /projects, and /owner when logged in) */}
         <nav id="nav-center-links" className="hidden md:flex items-center gap-1.5">
           <Link
             id="nav-link-home"
@@ -86,6 +88,23 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenDiscord }) => {
           >
             Projects & Plugins
           </Link>
+
+          {/* Owner Panel Button (Only visible when logged in) */}
+          {isAuthenticated && (
+            <Link
+              id="nav-link-owner-panel"
+              to="/owner"
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
+                isActive('/owner') || isActive('/admin')
+                  ? 'text-white bg-emerald-500/20 border border-emerald-500/40 shadow-[0_0_16px_rgba(16,185,129,0.2)]'
+                  : 'text-zinc-300 hover:text-white bg-white/[0.06] hover:bg-white/15 border border-white/15 hover:shadow-[0_0_12px_rgba(255,255,255,0.1)]'
+              }`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <Settings className="w-3.5 h-3.5 text-zinc-300" />
+              <span>Owner Panel</span>
+            </Link>
+          )}
 
           {/* Quick Slug Switcher Dropdown (Only if projects exist) */}
           {projects.length > 0 && (
@@ -134,8 +153,20 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenDiscord }) => {
           )}
         </nav>
 
-        {/* Right: Prominent "Join Discord" CTA button */}
+        {/* Right: Prominent "Join Discord" CTA button & Logout when authenticated */}
         <div className="hidden md:flex items-center gap-3">
+          {isAuthenticated && (
+            <button
+              id="nav-owner-logout-btn"
+              onClick={logout}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white/[0.04] hover:bg-red-500/15 text-zinc-400 hover:text-red-300 border border-white/10 hover:border-red-500/30 text-xs font-mono transition-colors cursor-pointer"
+              title="Sign out of Owner Panel"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Logout</span>
+            </button>
+          )}
+
           <button
             id="nav-join-discord-btn"
             onClick={onOpenDiscord}
@@ -215,6 +246,42 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenDiscord }) => {
             >
               Projects & Plugins
             </Link>
+
+            {/* Owner Panel in Mobile Drawer */}
+            {isAuthenticated ? (
+              <div className="pt-2 border-t border-white/5 flex items-center justify-between">
+                <Link
+                  to="/owner"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex-1 px-4 py-2.5 rounded-full text-sm font-medium flex items-center gap-2 ${
+                    isActive('/owner')
+                      ? 'text-white bg-emerald-500/20'
+                      : 'text-zinc-200 bg-white/5'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <Settings className="w-4 h-4 text-zinc-300" />
+                  <span>Owner Panel</span>
+                </Link>
+                <button
+                  onClick={() => {
+                    logout();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="ml-2 px-3 py-2 text-xs text-red-400 hover:text-red-300 font-mono"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-4 py-2.5 rounded-full text-xs text-zinc-500 hover:text-zinc-300 font-mono"
+              >
+                Owner Login →
+              </Link>
+            )}
           </div>
 
           {projects.length > 0 && (

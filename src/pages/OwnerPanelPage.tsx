@@ -343,7 +343,7 @@ export const OwnerPanelPage: React.FC = () => {
               </span>
             </div>
             <p className="text-xs text-zinc-400 mt-1">
-              Logged in as <strong className="text-white">{ownerInfo?.email}</strong>
+              Logged in as <strong className="text-white">{ownerInfo?.displayName || 'Flux Administrator'}</strong> • <span className="text-zinc-500">{ownerInfo?.role || 'Owner'}</span>
             </p>
           </div>
         </div>
