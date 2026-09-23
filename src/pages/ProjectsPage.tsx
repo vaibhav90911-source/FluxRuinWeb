@@ -112,7 +112,7 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ onOpenDiscord }) => 
             Projects, Packs & Configurations
           </h1>
           <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
-            Browse verified Minecraft plugins, texture packs, modpacks, server skripts, and optimized config.yml files. All downloads are securely hosted on Modrinth and official release links.
+            Browse verified Minecraft plugins, texture packs, modpacks, server skripts, and optimized config.yml files. All downloads are available on Modrinth and official release links.
           </p>
         </div>
 

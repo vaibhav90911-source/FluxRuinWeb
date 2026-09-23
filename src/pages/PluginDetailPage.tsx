@@ -229,7 +229,7 @@ export const PluginDetailPage: React.FC = () => {
 
               <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 text-xs font-mono flex items-center gap-1.5">
                 <Globe className="w-3 h-3 text-emerald-400" />
-                <span>Hosted on {platformName}</span>
+                <span>Available on {platformName}</span>
               </span>
             </div>
 
