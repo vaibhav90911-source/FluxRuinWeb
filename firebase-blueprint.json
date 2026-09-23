@@ -1,0 +1,58 @@
+{
+  "entities": {
+    "project": {
+      "title": "Project",
+      "description": "A published plugin, modpack, config, or Minecraft tool.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the project"
+        },
+        "slug": {
+          "type": "string",
+          "description": "URL-friendly slug for routing"
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name of the project"
+        },
+        "tagline": {
+          "type": "string",
+          "description": "Brief one-line summary"
+        },
+        "description": {
+          "type": "string",
+          "description": "Project overview description"
+        },
+        "version": {
+          "type": "string",
+          "description": "Version string e.g. v1.0.0"
+        },
+        "category": {
+          "type": "string",
+          "description": "Category e.g. Plugin, Modpack, Config, Skript, Texture Pack"
+        },
+        "projectType": {
+          "type": "string",
+          "description": "Type classification"
+        },
+        "downloadUrl": {
+          "type": "string",
+          "description": "External download link (Modrinth, BuiltByBit, etc.)"
+        }
+      },
+      "required": [
+        "id",
+        "slug",
+        "name"
+      ]
+    }
+  },
+  "firestore": {
+    "/projects/{projectId}": {
+      "schema": "project",
+      "description": "Collection of published Minecraft projects"
+    }
+  }
+}

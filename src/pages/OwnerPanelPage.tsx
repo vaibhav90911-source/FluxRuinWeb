@@ -110,8 +110,8 @@ export const OwnerPanelPage: React.FC = () => {
       }
       setTagsInput(tmpl.tags.join(', '));
       setFeaturesInput(tmpl.features.join('\n'));
-      setConfigFilename(tmpl.configExample.filename);
-      setConfigCode(tmpl.configExample.code);
+      setConfigFilename(tmpl.configExample?.filename || 'config.yml');
+      setConfigCode(tmpl.configExample?.code || '');
       setSupportedPlatformsInput(tmpl.supportedPlatforms.join(', '));
       setDownloadUrl(tmpl.downloadUrl || 'https://modrinth.com');
       setDownloadPlatform(tmpl.downloadPlatform || 'Modrinth');
@@ -136,8 +136,8 @@ export const OwnerPanelPage: React.FC = () => {
     setDownloadPlatform('Modrinth');
     setGithubUrl('');
     setPurchaseUrl('');
-    setConfigFilename(tmpl.configExample.filename);
-    setConfigCode(tmpl.configExample.code);
+    setConfigFilename(tmpl.configExample?.filename || 'config.yml');
+    setConfigCode(tmpl.configExample?.code || '');
     setSupportedPlatformsInput(tmpl.supportedPlatforms.join(', '));
     setModalOpen(true);
   };
@@ -251,12 +251,15 @@ export const OwnerPanelPage: React.FC = () => {
       downloadPlatform: finalPlatform,
       githubUrl: githubUrl.trim() || undefined,
       purchaseUrl: purchaseUrl.trim() || undefined,
-      configExample: {
-        filename: configFilename.trim() || 'config.yml',
-        language: configFilename.endsWith('.json') ? 'json' : configFilename.endsWith('.sk') ? 'yaml' : 'yaml',
-        description: `Configuration/file sample for ${name}`,
-        code: configCode || '# Empty file\n'
-      },
+      configExample:
+        configCode && configCode.trim() && configCode.trim() !== '# Empty file'
+          ? {
+              filename: configFilename.trim() || 'config.yml',
+              language: configFilename.endsWith('.json') ? 'json' : configFilename.endsWith('.sk') ? 'yaml' : 'yaml',
+              description: `Configuration/file sample for ${name}`,
+              code: configCode.trim()
+            }
+          : undefined,
       docs: editingProject?.docs || {
         title: `${projectType} Installation & Guide`,
         description: `Quick instructions for installing and running ${name}.`,
@@ -852,7 +855,7 @@ export const OwnerPanelPage: React.FC = () => {
               <div className="p-5 rounded-3xl bg-black border border-white/10 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-mono uppercase tracking-wider text-zinc-300">
-                    File Preview / Code Sample (e.g. config.yml, pack.mcmeta, script.sk)
+                    File Preview / Code Sample (Optional - leave empty if no config.yml)
                   </span>
                   <span className="text-[10px] font-mono text-zinc-400">Live Code Block on Detail Page</span>
                 </div>

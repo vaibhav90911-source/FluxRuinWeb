@@ -59,15 +59,14 @@ export const Footer: React.FC<FooterProps> = ({ onOpenDiscord }) => {
           {/* Dynamic Plugins or Community */}
           <div>
             <h4 className="text-xs font-mono uppercase tracking-wider text-white mb-3">
-              {projects.length > 0 ? 'Published Catalog' : 'Community & Updates'}
+              {projects.length > 0 ? 'Published Projects' : 'Community & Updates'}
             </h4>
             <ul className="space-y-2 text-xs font-mono">
               {projects.length > 0 ? (
                 projects.slice(0, 4).map((p) => (
                   <li key={p.slug}>
-                    <Link to={`/${p.slug}`} className="hover:text-white transition-colors flex items-center gap-1.5">
-                      <span className="text-zinc-500">/</span>
-                      <span className="text-zinc-300">{p.name}</span>
+                    <Link to={`/${p.slug}`} className="hover:text-white transition-colors flex items-center justify-between gap-1.5">
+                      <span className="text-zinc-300 hover:text-white">{p.name}</span>
                       <span className="text-[10px] px-1.5 py-0.5 bg-white/10 text-white rounded-full">{p.version}</span>
                     </Link>
                   </li>

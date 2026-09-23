@@ -92,7 +92,7 @@ function AppContent() {
               path="/:slug"
               element={
                 <PageTransition>
-                  <PluginDetailPage onOpenDiscord={handleOpenDiscord} />
+                  <PluginDetailPage />
                 </PageTransition>
               }
             />

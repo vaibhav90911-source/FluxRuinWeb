@@ -242,7 +242,6 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ onOpenDiscord }) => 
                           </span>
                         </div>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs font-mono text-zinc-400">/{item.slug}</span>
                           <span className={`text-[10px] font-mono px-2.5 py-0.5 rounded-full border ${getTypeBadgeColor(itemType)}`}>
                             {itemType}
                           </span>

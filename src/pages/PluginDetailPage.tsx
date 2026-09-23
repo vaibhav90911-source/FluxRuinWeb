@@ -1,47 +1,110 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft,
-  Download,
   ExternalLink,
-  Github,
-  Star,
-  CheckCircle2,
-  Calendar,
-  Layers,
-  Terminal,
-  Shield,
-  Sparkles,
-  FileCode,
   BookOpen,
-  History,
+  FileCode,
+  Globe,
+  Terminal,
   AlertCircle,
   Copy,
   Check,
-  Globe,
-  Palette,
+  Zap,
+  CheckCircle2,
   Boxes,
+  Palette,
   Scroll,
-  Settings2,
-  Package
+  Settings2
 } from 'lucide-react';
 import { useProjects } from '../hooks/useProjects';
-import { DISCORD_INVITE_URL } from '../data/constants';
-import { CodeBlock } from '../components/CodeBlock';
 
-interface PluginDetailPageProps {
-  onOpenDiscord: () => void;
+interface CodeBlockProps {
+  code: string;
+  language: string;
+  filename?: string;
+  showLineNumbers?: boolean;
 }
 
-export const PluginDetailPage: React.FC<PluginDetailPageProps> = ({ onOpenDiscord }) => {
+const CodeBlock: React.FC<CodeBlockProps> = ({ code, language, filename, showLineNumbers = true }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const lines = code.trim().split('\n');
+
+  return (
+    <div className="rounded-2xl overflow-hidden border border-white/10 bg-[#080808] my-4 shadow-xl">
+      {filename && (
+        <div className="flex items-center justify-between px-4 py-2.5 bg-[#101010] border-b border-white/5 text-xs text-zinc-400 font-mono">
+          <div className="flex items-center gap-2">
+            <Terminal className="w-3.5 h-3.5 text-zinc-400" />
+            <span className="text-white font-medium">{filename}</span>
+          </div>
+          <button
+            onClick={handleCopy}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white transition-colors cursor-pointer text-[11px]"
+            title="Copy code"
+          >
+            {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+            <span>{copied ? 'Copied!' : 'Copy'}</span>
+          </button>
+        </div>
+      )}
+
+      <div className="relative p-4 font-mono text-xs overflow-x-auto text-[#E6EDF3] leading-relaxed">
+        {!filename && (
+          <button
+            onClick={handleCopy}
+            className="absolute top-3 right-3 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+            title="Copy code"
+          >
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+          </button>
+        )}
+
+        <pre className="flex">
+          {showLineNumbers && (
+            <div className="select-none text-zinc-600 text-right pr-4 border-r border-white/5 mr-4 shrink-0">
+              {lines.map((_, i) => (
+                <div key={i}>{i + 1}</div>
+              ))}
+            </div>
+          )}
+          <code className="text-zinc-200">{code.trim()}</code>
+        </pre>
+      </div>
+    </div>
+  );
+};
+
+export const PluginDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  const [activeTab, setActiveTab] = useState<'config' | 'docs' | 'changelog'>('config');
-  const [copiedLink, setCopiedLink] = useState(false);
   const projects = useProjects();
 
-  const plugin = slug ? projects.find((p) => p.slug.toLowerCase() === slug.toLowerCase()) : undefined;
+  const plugin = slug
+    ? projects.find((p) => p.slug.toLowerCase() === slug.toLowerCase() || p.id === slug)
+    : undefined;
 
-  // Unknown project / 404 state
+  const hasConfig = Boolean(
+    plugin?.configExample &&
+    plugin.configExample.code &&
+    plugin.configExample.code.trim().length > 0 &&
+    plugin.configExample.code.trim() !== '# Empty file'
+  );
+
+  const [activeTab, setActiveTab] = useState<'config' | 'docs'>(hasConfig ? 'config' : 'docs');
+
+  useEffect(() => {
+    if (!hasConfig && activeTab === 'config') {
+      setActiveTab('docs');
+    }
+  }, [hasConfig, activeTab]);
+
   if (!plugin) {
     return (
       <div className="min-h-screen pt-32 pb-20 px-4 max-w-4xl mx-auto text-center">
@@ -52,7 +115,7 @@ export const PluginDetailPage: React.FC<PluginDetailPageProps> = ({ onOpenDiscor
 
           <h1 className="text-3xl font-bold text-white">Project Not Found</h1>
           <p className="text-sm text-zinc-400 max-w-md mx-auto">
-            The project slug &ldquo;<span className="text-white font-mono">/{slug}</span>&rdquo; does not exist on Flux.
+            The requested project does not exist on Flux.
           </p>
 
           <div className="pt-2">
@@ -80,7 +143,7 @@ export const PluginDetailPage: React.FC<PluginDetailPageProps> = ({ onOpenDiscor
                     <span className="text-sm font-medium text-white group-hover:text-zinc-300">
                       {p.name}
                     </span>
-                    <span className="text-xs font-mono text-zinc-500">/{p.slug}</span>
+                    <span className="text-xs text-zinc-400">View project →</span>
                   </Link>
                 ))}
               </div>
@@ -91,29 +154,22 @@ export const PluginDetailPage: React.FC<PluginDetailPageProps> = ({ onOpenDiscor
     );
   }
 
-  // Detect platform & type
   const projectType = plugin.projectType || plugin.category || 'Plugin';
-  
-  const detectPlatform = (url: string, platform?: string): string => {
-    if (platform && platform !== 'External') return platform;
-    const lower = url.toLowerCase();
-    if (lower.includes('modrinth.com')) return 'Modrinth';
-    if (lower.includes('curseforge.com')) return 'CurseForge';
-    if (lower.includes('github.com')) return 'GitHub';
-    if (lower.includes('builtbybit.com')) return 'BuiltByBit';
-    if (lower.includes('planetminecraft.com')) return 'PlanetMinecraft';
-    return 'Official Release Site';
-  };
+  const platformName = plugin.downloadPlatform || 'Modrinth';
 
-  const platformName = detectPlatform(plugin.downloadUrl, plugin.downloadPlatform);
-
-  const getDownloadButtonLabel = () => {
-    if (platformName === 'Modrinth') return 'Download on Modrinth';
-    if (platformName === 'CurseForge') return 'Download on CurseForge';
-    if (platformName === 'GitHub') return 'Get on GitHub Releases';
-    if (platformName === 'BuiltByBit') return 'Get on BuiltByBit';
-    if (platformName === 'PlanetMinecraft') return 'Download on PlanetMinecraft';
-    return 'Go to Download Page';
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'Texture Pack':
+        return <Palette className="w-4 h-4" />;
+      case 'Modpack':
+        return <Boxes className="w-4 h-4" />;
+      case 'Skript':
+        return <Scroll className="w-4 h-4" />;
+      case 'Config':
+        return <Settings2 className="w-4 h-4" />;
+      default:
+        return <Zap className="w-4 h-4" />;
+    }
   };
 
   const getTypeBadgeColor = (type?: string) => {
@@ -131,16 +187,10 @@ export const PluginDetailPage: React.FC<PluginDetailPageProps> = ({ onOpenDiscor
     }
   };
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(plugin.downloadUrl);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2500);
-  };
-
   return (
-    <div id="dynamic-plugin-page" className="min-h-screen pt-24 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <div id="plugin-detail-page" className="min-h-screen pt-24 pb-20 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
       
-      {/* Top Breadcrumb & "Back to Projects" Button */}
+      {/* Top Breadcrumbs & Back link */}
       <div className="flex items-center justify-between mb-8">
         <Link
           id="back-to-projects-btn"
@@ -156,7 +206,7 @@ export const PluginDetailPage: React.FC<PluginDetailPageProps> = ({ onOpenDiscor
           <span>/</span>
           <span className="text-zinc-400">{projectType.toLowerCase().replace(/\s+/g, '-')}</span>
           <span>/</span>
-          <span className="text-white font-medium">/{plugin.slug}</span>
+          <span className="text-white font-medium">{plugin.name}</span>
         </div>
       </div>
 
@@ -198,37 +248,58 @@ export const PluginDetailPage: React.FC<PluginDetailPageProps> = ({ onOpenDiscor
               {plugin.longDescription}
             </p>
 
-            {/* Metadata pills */}
-            <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-400 pt-2 font-mono">
-              <div className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-zinc-500" />
-                <span>Updated: {plugin.lastUpdated}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                <span>{plugin.stars} stars</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Globe className="w-3.5 h-3.5 text-zinc-400" />
-                <span>Official Release</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-zinc-500" />
-                <span>By {plugin.author}</span>
-              </div>
+            {/* Metadata Tags */}
+            <div className="flex flex-wrap gap-2 pt-2">
+              {plugin.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="px-3 py-1 rounded-full text-xs font-mono bg-white/[0.04] text-zinc-300 border border-white/10"
+                >
+                  {tag}
+                </span>
+              ))}
             </div>
 
-            {/* Supported platforms */}
-            <div className="pt-2">
-              <div className="text-[11px] font-mono uppercase text-zinc-500 mb-1.5">
-                Supported Platforms & Environments:
-              </div>
-              <div className="flex flex-wrap gap-1.5">
+          </div>
+
+          {/* Right Action Box: Primary Platform CTA */}
+          <div className="w-full lg:w-72 rounded-2xl bg-white/[0.03] border border-white/10 p-5 flex flex-col gap-3 shrink-0">
+            <div className="flex items-center justify-between text-xs text-zinc-400 pb-2 border-b border-white/5">
+              <span>Access</span>
+              <span className="font-bold text-white uppercase">{plugin.price}</span>
+            </div>
+
+            {/* Primary Platform Download CTA */}
+            <a
+              id="cta-download-platform"
+              href={plugin.downloadUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-full bg-white hover:bg-zinc-200 text-black font-bold text-sm transition-all duration-200 shadow-md hover:shadow-[0_0_25px_rgba(255,255,255,0.4)] hover:scale-[1.02] active:scale-95 group"
+            >
+              <span>Get on {platformName}</span>
+              <ExternalLink className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+            </a>
+
+            {/* GitHub Source Link if Available */}
+            {plugin.githubUrl && (
+              <a
+                href={plugin.githubUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 text-xs font-mono transition-colors"
+              >
+                <span>View Source on GitHub</span>
+                <ExternalLink className="w-3.5 h-3.5 text-zinc-500" />
+              </a>
+            )}
+
+            {/* Supported Platform Badges */}
+            <div className="pt-2 text-[11px] font-mono text-zinc-500">
+              <div className="mb-1.5 uppercase tracking-wider text-[10px] text-zinc-400">Supported In:</div>
+              <div className="flex flex-wrap gap-1">
                 {plugin.supportedPlatforms.map((plat) => (
-                  <span
-                    key={plat}
-                    className="text-xs font-mono px-2 py-0.5 rounded bg-white/[0.04] text-zinc-300 border border-white/5"
-                  >
+                  <span key={plat} className="px-2 py-0.5 rounded-full bg-white/[0.05] text-zinc-300">
                     {plat}
                   </span>
                 ))}
@@ -237,105 +308,28 @@ export const PluginDetailPage: React.FC<PluginDetailPageProps> = ({ onOpenDiscor
 
           </div>
 
-          {/* Action Box: External Download Notice and Link */}
-          <div className="lg:w-80 shrink-0 p-6 rounded-3xl bg-[#0F0F0F] border border-white/10 space-y-4">
-            
-            <div className="flex items-baseline justify-between">
-              <span className="text-xs text-zinc-400 font-mono">Pricing:</span>
-              <span className="text-sm font-bold text-white font-mono">{plugin.price}</span>
-            </div>
-
-            {/* External Download Button (No direct download) */}
-            <a
-              id="plugin-download-btn"
-              href={plugin.downloadUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-full bg-white hover:bg-zinc-200 text-black font-bold text-sm transition-all duration-200 shadow-md group cursor-pointer"
-            >
-              <span>{getDownloadButtonLabel()}</span>
-              <ExternalLink className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </a>
-
-            {/* External Download Explanation */}
-            <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1.5">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-200">
-                <Shield className="w-3.5 h-3.5 text-zinc-300" />
-                <span>Verified External Download</span>
-              </div>
-              <p className="text-[11px] text-zinc-400 leading-relaxed">
-                Downloads are verified and hosted on <strong className="text-white">{platformName}</strong>. You will be redirected to the official release page.
-              </p>
-            </div>
-
-            {/* Copy Direct Link button */}
-            <button
-              onClick={handleCopyLink}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white text-xs font-medium border border-white/10 transition-colors cursor-pointer"
-            >
-              {copiedLink ? (
-                <>
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="text-emerald-400">Link Copied to Clipboard</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3.5 h-3.5" />
-                  <span>Copy {platformName} Link</span>
-                </>
-              )}
-            </button>
-
-            {/* Discord Support Button */}
-            <button
-              id="plugin-purchase-discord-btn"
-              onClick={onOpenDiscord}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-white/5 hover:bg-white/10 text-white font-medium text-xs border border-white/10 transition-colors cursor-pointer"
-            >
-              <span>Community & Support</span>
-            </button>
-
-            {/* GitHub Repository Link */}
-            {plugin.githubUrl && (
-              <a
-                id="plugin-github-btn"
-                href={plugin.githubUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] hover:bg-white/[0.07] text-zinc-400 hover:text-white text-xs transition-colors"
-              >
-                <Github className="w-4 h-4" />
-                <span>View Source on GitHub</span>
-                <ExternalLink className="w-3 h-3 ml-auto opacity-60" />
-              </a>
-            )}
-
-            <div className="pt-2 border-t border-white/5 text-[11px] text-zinc-500 text-center font-mono">
-              Release integrity guaranteed • Flux Ecosystem
-            </div>
-
-          </div>
-
         </div>
 
       </div>
 
-      {/* Navigation Tabs: Configuration / Docs / Changelog */}
+      {/* Navigation Tabs: Configuration (only if added) / Docs */}
       <div className="flex items-center gap-2 border-b border-white/10 mb-8 overflow-x-auto scrollbar-none pb-1">
-        <button
-          id="tab-config-guide"
-          onClick={() => setActiveTab('config')}
-          className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'config'
-              ? 'border-white text-white'
-              : 'border-transparent text-zinc-400 hover:text-white'
-          }`}
-        >
-          <FileCode className="w-4 h-4" />
-          <span>
-            {projectType === 'Config' ? 'config.yml Setup' : projectType === 'Skript' ? 'Skript Code Preview' : 'Configuration & Setup'}
-          </span>
-        </button>
+        {hasConfig && plugin.configExample && (
+          <button
+            id="tab-config-guide"
+            onClick={() => setActiveTab('config')}
+            className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'config'
+                ? 'border-white text-white'
+                : 'border-transparent text-zinc-400 hover:text-white'
+            }`}
+          >
+            <FileCode className="w-4 h-4" />
+            <span>
+              {plugin.configExample.filename || 'Configuration'}
+            </span>
+          </button>
+        )}
 
         <button
           id="tab-quickstart-docs"
@@ -349,23 +343,10 @@ export const PluginDetailPage: React.FC<PluginDetailPageProps> = ({ onOpenDiscor
           <BookOpen className="w-4 h-4" />
           <span>Installation Guide</span>
         </button>
-
-        <button
-          id="tab-changelog"
-          onClick={() => setActiveTab('changelog')}
-          className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'changelog'
-              ? 'border-white text-white'
-              : 'border-transparent text-zinc-400 hover:text-white'
-          }`}
-        >
-          <History className="w-4 h-4" />
-          <span>Changelog ({plugin.changelog.length})</span>
-        </button>
       </div>
 
-      {/* Tab 1: Configuration / Code File Guide */}
-      {activeTab === 'config' && (
+      {/* Tab 1: Configuration / Code File Guide (Rendered only when config is added) */}
+      {hasConfig && plugin.configExample && activeTab === 'config' && (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -449,78 +430,20 @@ export const PluginDetailPage: React.FC<PluginDetailPageProps> = ({ onOpenDiscor
               </div>
             ))}
           </div>
-        </div>
-      )}
 
-      {/* Tab 3: Changelog */}
-      {activeTab === 'changelog' && (
-        <div className="space-y-6">
-          <div>
-            <h3 className="text-xl font-bold text-white mb-1">
-              Release History & Changelog
-            </h3>
-            <p className="text-xs text-zinc-400">
-              Track patches, optimizations, and updates for {plugin.name}.
-            </p>
-          </div>
-
-          <div className="relative border-l border-white/10 ml-4 space-y-8 pl-6">
-            {plugin.changelog.map((entry, idx) => (
-              <div key={entry.version} className="relative group">
-                {/* Node icon */}
-                <span className="absolute -left-[31px] top-1.5 w-3 h-3 rounded-full bg-white border-4 border-black" />
-
-                <div className="flex flex-wrap items-center gap-3 mb-2">
-                  <span className="text-base font-bold font-mono text-white">
-                    {entry.version}
-                  </span>
-                  <span className="text-xs text-zinc-500 font-mono">
-                    {entry.date}
-                  </span>
-                  {idx === 0 && (
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                      CURRENT STABLE
-                    </span>
-                  )}
+          {/* Key Feature Specs when viewing docs */}
+          <div className="rounded-3xl bg-[#0A0A0A] border border-white/10 p-6 sm:p-8 space-y-4 mt-6">
+            <h4 className="text-sm font-mono uppercase tracking-wider text-white">
+              Features Included
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {plugin.features.map((feat, idx) => (
+                <div key={idx} className="flex items-start gap-2.5 text-xs text-zinc-300">
+                  <CheckCircle2 className="w-4 h-4 text-white shrink-0 mt-0.5" />
+                  <span>{feat}</span>
                 </div>
-
-                {/* Highlights */}
-                {entry.highlights.length > 0 && (
-                  <ul className="text-xs text-zinc-300 space-y-1 mb-3">
-                    {entry.highlights.map((hl, i) => (
-                      <li key={i} className="flex items-center gap-2">
-                        <span className="text-zinc-500">•</span>
-                        <span>{hl}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-
-                {/* Categorized Changes */}
-                <div className="space-y-1.5 pt-1">
-                  {entry.types.map((t, i) => {
-                    const badgeColor =
-                      t.type === 'added'
-                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                        : t.type === 'fixed'
-                        ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                        : 'bg-white/10 text-white border-white/20';
-
-                    return (
-                      <div key={i} className="flex items-start gap-2 text-xs">
-                        <span
-                          className={`uppercase text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border shrink-0 mt-0.5 ${badgeColor}`}
-                        >
-                          {t.type}
-                        </span>
-                        <span className="text-zinc-400">{t.text}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -561,11 +484,11 @@ export const PluginDetailPage: React.FC<PluginDetailPageProps> = ({ onOpenDiscor
                         {oType}
                       </span>
                     </div>
-                    <p className="text-xs text-zinc-400 line-clamp-2 mb-2">
+                    <p className="text-xs text-zinc-400 line-clamp-2 mb-3">
                       {other.description}
                     </p>
-                    <div className="text-[11px] font-mono text-zinc-400">
-                      /{other.slug} →
+                    <div className="text-[11px] font-medium text-white group-hover:underline">
+                      View {other.name} →
                     </div>
                   </Link>
                 );

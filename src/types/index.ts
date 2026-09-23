@@ -51,9 +51,9 @@ export interface PluginItem {
   projectType?: string; // 'Plugin', 'Texture Pack', 'Modpack', 'Skript', 'Config'
   githubUrl?: string;
   purchaseUrl?: string;
-  configExample: PluginConfig;
+  configExample?: PluginConfig;
   docs: PluginDocs;
-  changelog: ChangelogItem[];
+  changelog?: ChangelogItem[];
   supportedPlatforms: string[];
 }
 
